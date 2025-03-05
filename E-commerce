@@ -1,0 +1,72 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, classification_report
+
+
+df = pd.read_csv("C:/Users/ragha/OneDrive/Desktop/df_modcloth.csv")
+print("Dataset Loaded Successfully")
+
+print(df.head())
+print(df.info())
+
+df = df.dropna()
+
+target_column = df.columns[-1]  
+print(f'Target column identified: {target_column}')
+
+label_encoders = {}
+for column in df.select_dtypes(include=['object']).columns:
+    le = LabelEncoder()
+    df[column] = le.fit_transform(df[column])
+    label_encoders[column] = le
+
+X = df.drop(columns=[target_column])
+y = df[target_column]
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+model = RandomForestClassifier(n_estimators=100, random_state=42)
+model.fit(X_train, y_train)
+
+y_pred = model.predict(X_test)
+
+accuracy = accuracy_score(y_test, y_pred)
+print(f'Accuracy: {accuracy:.2f}')
+print(classification_report(y_test, y_pred))
+
+df['category'].value_counts().plot.pie(autopct='%1.1f%%', startangle=90,cmap='Set3', figsize=(8,8))
+plt.title('Category Distribution')
+plt.ylabel('')
+plt.show()
+
+plt.figure(figsize=(12,6))
+sns.countplot(data=df, x='category', palette='viridis')
+plt.xticks(rotation=45)
+plt.title('count of Items per Category')
+plt.xlabel('category')
+plt.ylabel('count')
+plt.show()
+
+plt.figure(figsize=(10, 6))
+corr_matrix = df.corr()
+sns.heatmap(corr_matrix, annot=True, fmt=".2f", cmap='coolwarm', linewidths=0.5)
+plt.title("Correlation Heatmap")
+plt.show()
+
+plt.figure(figsize=(8,6))
+sns.histplot(df['rating'], bins=20, kde=True, color='blue')
+plt.title('Rating Distribution')
+plt.xlabel('Rating')
+plt.ylabel('Frequency')
+plt.show()
+
